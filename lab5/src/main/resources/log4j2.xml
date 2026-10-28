@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <CustomLevels>
+        <CustomLevel name="FAIL" intLevel="150"/>
+        <CustomLevel name="OK" intLevel="350"/>
+    </CustomLevels>
+
+    <Properties>
+        <Property name="logDir">logs</Property>
+        <Property name="logPattern">
+            %d{HH:mm:ss.SSS} [%t] %-5level %c{1} - %msg%n
+        </Property>
+    </Properties>
+
+    <Appenders>
+
+        <!-- Цветной вывод в консоль -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout
+                    disableAnsi="false"
+                    pattern="%d{HH:mm:ss.SSS} %style{%-5level}{bright,magenta} %style{%c{1}}{cyan} - %highlight{%msg}{FATAL=bright red, ERROR=red, WARN=yellow, INFO=blue, OK=bright green, FAIL=bright red}%n"/>
+        </Console>
+
+        <!-- INFO и сообщения более высокого приоритета -->
+        <RollingFile name="InfoFile"
+                     fileName="${logDir}/info.log"
+                     filePattern="${logDir}/archive/info-%i.log.gz">
+            <PatternLayout pattern="${logPattern}"/>
+            <ThresholdFilter level="INFO"
+                             onMatch="ACCEPT"
+                             onMismatch="DENY"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="1 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+
+        <!-- WARN и более серьёзные сообщения -->
+        <RollingFile name="WarnFile"
+                     fileName="${logDir}/warn.log"
+                     filePattern="${logDir}/archive/warn-%i.log.gz">
+            <PatternLayout pattern="${logPattern}"/>
+            <ThresholdFilter level="WARN"
+                             onMatch="ACCEPT"
+                             onMismatch="DENY"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="1 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+
+        <!-- ERROR, FAIL и более серьёзные сообщения -->
+        <RollingFile name="ErrorFile"
+                     fileName="${logDir}/error.log"
+                     filePattern="${logDir}/archive/error-%i.log.gz">
+            <PatternLayout pattern="${logPattern}"/>
+            <ThresholdFilter level="ERROR"
+                             onMatch="ACCEPT"
+                             onMismatch="DENY"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="1 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+
+    </Appenders>
+
+    <Loggers>
+        <Root level="ALL">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="InfoFile"/>
+            <AppenderRef ref="WarnFile"/>
+            <AppenderRef ref="ErrorFile"/>
+        </Root>
+    </Loggers>
+
+</Configuration>
