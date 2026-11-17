@@ -72,3 +72,17 @@ Report in Russian:
 - Commit hashes
 - GitHub push status
 - Instructions for building and running the project
+
+## Batch laboratory workflow
+
+When the user explicitly requests multiple laboratories:
+
+- You may create and switch between new laboratory branches.
+- Always create new branches from an updated main.
+- Never modify existing completed laboratory branches.
+- Process laboratories sequentially.
+- Finish and commit one laboratory before switching.
+- Ensure the working tree is clean before switching.
+- Never force push or overwrite existing branches.
+- Keep all assignment source files unchanged.
+- Stop and report any unresolved Git conflicts.
