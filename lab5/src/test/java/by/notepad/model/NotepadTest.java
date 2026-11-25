@@ -6,7 +6,9 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,9 +22,12 @@ class NotepadTest {
 
     private Notepad notepad;
 
+    @TempDir
+    Path directory;
+
     @BeforeEach
     void setUp() {
-        notepad = new Notepad();
+        notepad = new Notepad(directory.resolve("notes.txt"));
 
         LOGGER.info("Создан новый экземпляр Notepad");
     }
@@ -102,15 +107,9 @@ class NotepadTest {
     void shouldRejectNoteWithNullDate() {
         LOGGER.info("Проверка заметки без даты");
 
-        Note note = new Note(
-                null,
-                "Заголовок",
-                "Текст заметки"
-        );
-
         assertThrows(
-                IllegalArgumentException.class,
-                () -> notepad.addNote(note)
+                NullPointerException.class,
+                () -> new Note(null, "Заголовок", "Текст заметки")
         );
 
         LOGGER.warn("Заметка без даты отклонена");

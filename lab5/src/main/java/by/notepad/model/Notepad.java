@@ -1,29 +1,39 @@
 package by.notepad.model;
 
+import by.notepad.storage.NoteFile;
+
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class Notepad {
 
-    private final Map<LocalDate, DatePage> pages = new TreeMap<>();
+    private final NoteFile file;
+
+    public Notepad() {
+        this(Path.of("notes.txt"));
+    }
+
+    public Notepad(Path path) {
+        file = new NoteFile(path);
+    }
 
     public void addNote(Note note) {
         if (note == null) {
             throw new IllegalArgumentException("Note cannot be null");
         }
 
-        DatePage page = pages.computeIfAbsent(
-                note.getDate(), DatePage::new);
-
-        page.addNote(note);
+        file.update(notes -> notes.add(note));
     }
 
     public List<Note> getNotesByDate(LocalDate date) {
-        DatePage page = pages.get(date);
+        Objects.requireNonNull(date, "Date cannot be null");
+        DatePage page = readPages().get(date);
 
         if (page == null) {
             return Collections.emptyList();
@@ -33,17 +43,29 @@ public class Notepad {
     }
 
     public List<LocalDate> getDates() {
-        return new ArrayList<>(pages.keySet());
+        return new ArrayList<>(readPages().keySet());
+    }
+
+    public List<Note> getAllNotes() {
+        return readPages().values().stream()
+                .flatMap(page -> page.getNotes().stream())
+                .toList();
     }
 
     public int size() {
-        return pages.values().stream()
-                .mapToInt(page -> page.getNotes().size())
-                .sum();
+        return file.load().size();
     }
 
     public void clear() {
-        pages.clear();
+        file.update(List::clear);
+    }
+
+    private Map<LocalDate, DatePage> readPages() {
+        Map<LocalDate, DatePage> pages = new TreeMap<>();
+        for (Note note : file.load()) {
+            pages.computeIfAbsent(note.getDate(), DatePage::new).addNote(note);
+        }
+        return pages;
     }
 
     public class DatePage {

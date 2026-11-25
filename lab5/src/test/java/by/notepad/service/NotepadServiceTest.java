@@ -9,7 +9,9 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -25,9 +27,12 @@ class NotepadServiceTest {
     private Notepad notepad;
     private NotepadService service;
 
+    @TempDir
+    Path directory;
+
     @BeforeEach
     void setUp() {
-        notepad = new Notepad();
+        notepad = new Notepad(directory.resolve("notes.txt"));
 
         service = new NotepadService(notepad);
 
@@ -52,7 +57,7 @@ class NotepadServiceTest {
                 new Note(date, "План покупок", "Купить тетради")
         );
 
-        List<Note> result = service.findByTitle("покуп");
+        List<Note> result = service.findByTitle("ПОКУП");
 
         assertEquals(2, result.size());
 
@@ -85,35 +90,16 @@ class NotepadServiceTest {
         LOGGER.info("Поиск несуществующей заметки вернул пустой список");
     }
 
-//    @Test
-//    void shouldSortNotesByTitle() {
-//        LOGGER.info("Проверка сортировки заметок по заголовку");
-//
-//        LocalDate date = LocalDate.of(2026, 10, 28);
-//
-//        notepad.addNote(
-//                new Note(date, "Учёба", "Подготовиться")
-//        );
-//
-//        notepad.addNote(
-//                new Note(date, "Английский", "Выучить слова")
-//        );
-//
-//        notepad.addNote(
-//                new Note(date, "Покупки", "Купить продукты")
-//        );
-//
-//        List<Note> sorted = service.sortByTitle(
-//                notepad.getNotesByDate(date)
-//        );
-//
-//        assertEquals(3, sorted.size());
-//        assertEquals("Английский", sorted.get(0).getTitle());
-//        assertEquals("Покупки", sorted.get(1).getTitle());
-//        assertEquals("Учёба", sorted.get(2).getTitle());
-//
-//        LOGGER.info("Заметки отсортированы по заголовку");
-//    }
+    @Test
+    void shouldSortNotesWithSameDateByTitleIgnoringCase() {
+        LocalDate date = LocalDate.of(2026, 10, 28);
+        notepad.addNote(new Note(date, "Учёба", "Подготовиться"));
+        notepad.addNote(new Note(date, "английский", "Выучить слова"));
+        notepad.addNote(new Note(date, "Покупки", "Купить продукты"));
+
+        assertEquals(List.of("английский", "Покупки", "Учёба"),
+                service.getAllSorted().stream().map(Note::getTitle).toList());
+    }
 
     @Test
     void shouldSortNotesByDate() {
@@ -139,17 +125,10 @@ class NotepadServiceTest {
         LOGGER.info("Сортировка по дате проверена");
     }
 
-//    @Test
-//    void shouldHandleEmptyListDuringSorting() {
-//        LOGGER.info("Проверка сортировки пустого списка");
-//
-//        List<Note> sorted = service.sortByTitle(List.of());
-//
-//        assertNotNull(sorted);
-//        assertTrue(sorted.isEmpty());
-//
-//        LOGGER.info("Пустой список обработан корректно");
-//    }
+    @Test
+    void shouldReturnEmptySortedListForEmptyNotepad() {
+        assertTrue(service.getAllSorted().isEmpty());
+    }
 
     @Test
     void shouldFindReminderAmongNotes() {
@@ -176,14 +155,10 @@ class NotepadServiceTest {
     }
 
     @Test
-    void shouldRejectNullSearchText() {
-        LOGGER.info("Проверка поиска с null");
+    void shouldReturnEmptyListForNullOrBlankSearchText() {
+        notepad.addNote(new Note(LocalDate.of(2026, 10, 28), "Покупки", "Текст"));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.findByTitle(null)
-        );
-
-        LOGGER.warn("Поиск с null отклонён");
+        assertTrue(service.findByTitle(null).isEmpty());
+        assertTrue(service.findByTitle(" \t").isEmpty());
     }
 }

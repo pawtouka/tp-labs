@@ -7,9 +7,21 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class NotepadService {
+
+    private static final Comparator<Note> BY_DATE_AND_TITLE = new Comparator<>() {
+        @Override
+        public int compare(Note first, Note second) {
+            int byDate = first.getDate().compareTo(second.getDate());
+            if (byDate != 0) {
+                return byDate;
+            }
+            return String.CASE_INSENSITIVE_ORDER.compare(first.getTitle(), second.getTitle());
+        }
+    };
 
     private final Notepad notepad;
 
@@ -26,23 +38,17 @@ public class NotepadService {
             return new ArrayList<>();
         }
 
-        return notepad.getDates().stream()
-                .flatMap(date -> notepad.getNotesByDate(date).stream())
+        String normalizedQuery = query.toLowerCase(Locale.ROOT);
+        return notepad.getAllNotes().stream()
                 .filter(note -> note.getTitle()
-                        .toLowerCase()
-                        .contains(query.toLowerCase()))
+                        .toLowerCase(Locale.ROOT)
+                        .contains(normalizedQuery))
                 .collect(Collectors.toList());
     }
 
     public List<Note> getAllSorted() {
-        List<Note> notes = notepad.getDates().stream()
-                .flatMap(date -> notepad.getNotesByDate(date).stream())
-                .collect(Collectors.toList());
-
-        notes.sort(Comparator
-                .comparing(Note::getDate)
-                .thenComparing(Note::getTitle,
-                        String.CASE_INSENSITIVE_ORDER));
+        List<Note> notes = new ArrayList<>(notepad.getAllNotes());
+        notes.sort(BY_DATE_AND_TITLE);
 
         return notes;
     }

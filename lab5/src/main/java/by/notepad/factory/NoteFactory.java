@@ -4,6 +4,7 @@ import by.notepad.model.Note;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Locale;
 
 public abstract class NoteFactory {
 
@@ -24,7 +25,7 @@ public abstract class NoteFactory {
         }
 
         return createNote(
-                type.trim().toUpperCase(),
+                type.strip().toUpperCase(Locale.ROOT),
                 date,
                 title,
                 text,
