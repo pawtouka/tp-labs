@@ -1,0 +1,4 @@
+/target/
+/tasks.csv
+/tasks.csv.lck
+/*.log.*
